@@ -1,11 +1,16 @@
 language: python
-python:
-  - "2.6"
-  - "2.7"
+python: 2.7
 env:
-  - DJANGO_VERSION=1.4.2
-  - DJANGO_VERSION=1.5a1
+  - TOXENV=py26-1.4
+  - TOXENV=py26-1.5
+  - TOXENV=py26-1.6
+  - TOXENV=py27-1.4
+  - TOXENV=py27-1.5
+  - TOXENV=py27-1.6
+  - TOXENV=py33-1.5
+  - TOXENV=py33-1.6
+  - TOXENV=docs
 install:
-  - pip install Django==$DJANGO_VERSION --index-url=http://pypi.renie.fr/
+  - pip install tox
 script:
-  - python setup.py test
+  - tox -e $TOXENV
