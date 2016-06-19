@@ -28,7 +28,24 @@ Get involved, submit issues and pull requests on the `code repository`_!
 Changes
 -------
 
-* **0.6.1**:
+* **1.0** (2015-07-10):
+
+  * Silence warnings with Django 1.8.
+
+* **0.6.4** (2015-03-31):
+
+  * Only set the redirect field to the value of ``request.get_full_path()`` if
+    the field does not already have a value. Patch by Michael Blatherwick.
+
+* **0.6.3** (2015-02-12):
+
+  * Add ``RatelimitMixin.get_ip``.
+
+* **0.6.2** (2014-07-28):
+
+  * Django 1.7 support. Patch by Mathieu Agopian.
+
+* **0.6.1** (2014-01-21):
 
   * Removed calls to deprecated ``check_test_cookie()``.
 

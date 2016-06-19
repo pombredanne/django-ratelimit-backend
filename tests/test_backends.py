@@ -1,15 +1,17 @@
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 import warnings
 
 import django
 
-from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.cache import cache
 from django.core.urlresolvers import reverse
 from django.test import TestCase
 from django.test.utils import override_settings
-from django.utils.unittest import skipIf
+try:
+    from unittest import skipIf
+except ImportError:
+    from django.utils.unittest import skipIf
 
 try:
     from django.contrib.auth import get_user_model
@@ -18,12 +20,10 @@ except ImportError:
 
 
 class RateLimitTests(TestCase):
-    urls = 'ratelimitbackend.tests.urls'
-
-    def setUp(self):
+    def setUp(self):  # noqa
         cache.clear()
 
-    def assertRateLimited(self, response):
+    def assertRateLimited(self, response):  # noqa
         self.assertContains(response, 'Too many failed login attempts',
                             status_code=403)
 
@@ -105,7 +105,8 @@ class RateLimitTests(TestCase):
 
     def test_ratelimit_admin_logins(self):
         url = reverse('admin:index')
-        response = self.client.get(url)
+        response = self.client.get(url, follow=True)
+        login_url = response.request['PATH_INFO']
         self.assertContains(response, 'username')
         wrong_data = {
             'username': u'hî',
@@ -113,10 +114,11 @@ class RateLimitTests(TestCase):
         }
         # 30 failing attempts are allowed
         for iteration in range(30):
-            response = self.client.post(url, wrong_data)
+            response = self.client.post(login_url, wrong_data)
             self.assertContains(response, 'username')
+            self.assertContains(response, 'for a staff account')
 
-        response = self.client.post(url, wrong_data)
+        response = self.client.post(login_url, wrong_data)
         self.assertRateLimited(response)
 
     def test_django_registry(self):
@@ -130,16 +132,13 @@ class RateLimitTests(TestCase):
             self.assertEqual(len(w), 1)
         url = reverse('admin:index')
         response = self.client.get(url)
-        self.assertContains(response, 'in the Auth application')
+        self.assertContains(response, 'in the Auth')
         self.assertContains(response, '"/admin/auth/user/add/"')
 
+    @override_settings(AUTHENTICATION_BACKENDS=('tests.backends.TestBackend',))
     def test_custom_ratelimit_logic(self):
         """Custom backend behaviour"""
         url = reverse('login')
-        old_backends = settings.AUTHENTICATION_BACKENDS
-        settings.AUTHENTICATION_BACKENDS = (
-            'ratelimitbackend.tests.backends.TestBackend',
-        )
 
         wrong_data = {
             'username': u'ùser1',
@@ -159,10 +158,8 @@ class RateLimitTests(TestCase):
         response = self.client.post(url, wrong_data)
         self.assertContains(response, 'username')
 
-        settings.AUTHENTICATION_BACKENDS = old_backends
-
     @override_settings(AUTHENTICATION_BACKENDS=(
-        'ratelimitbackend.tests.backends.TestCustomBackend',))
+        'tests.backends.TestCustomBackend',))
     def test_custom_backend(self):
         """Backend with custom authentication method"""
         url = reverse('custom_login')
@@ -189,7 +186,7 @@ class RateLimitTests(TestCase):
         self.assertRateLimited(response)
 
     @override_settings(AUTHENTICATION_BACKENDS=(
-        'ratelimitbackend.tests.backends.TestCustomBrokenBackend',))
+        'tests.backends.TestCustomBrokenBackend',))
     def test_custom_backend_no_username_key(self):
         """Custom backend with missing username_key"""
         url = reverse('custom_login')

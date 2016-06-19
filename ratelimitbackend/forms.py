@@ -1,7 +1,12 @@
 from django import forms
-from django.contrib.admin.forms import (
-    AdminAuthenticationForm as AdminAuthForm, ERROR_MESSAGE,
-)
+from django.contrib.admin.forms import AdminAuthenticationForm as AdminAuthForm
+
+try:
+    from django.contrib.admin.forms import ERROR_MESSAGE
+except ImportError:
+    # The ERROR_MESSAGE has been moved in Django>=1.7
+    ERROR_MESSAGE = AdminAuthForm.error_messages['invalid_login']
+
 from django.contrib.auth import authenticate
 from django.contrib.auth.forms import AuthenticationForm as AuthForm
 from django.utils.translation import ugettext_lazy as _
@@ -19,7 +24,7 @@ class AuthenticationForm(AuthForm):
             if self.user_cache is None:
                 raise forms.ValidationError(
                     _('Please enter a correct username and password. '
-                      'Note that both fields are case-sensitive.'),
+                      'Note that both fields may be case-sensitive.'),
                 )
             elif not self.user_cache.is_active:
                 raise forms.ValidationError(_('This account is inactive.'))

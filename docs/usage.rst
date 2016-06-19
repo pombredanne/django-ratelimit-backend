@@ -59,6 +59,9 @@ Quickstart
       if request.method == 'POST':
           form = AuthenticationForm(data=request.POST, request=request)
           # etc. etc.
+  
+  If you use ``django.contrib.auth.authenticate``, pass it the request object
+  as well.
 
 Customizing rate-limiting criteria
 ----------------------------------
@@ -89,7 +92,7 @@ To do this, simply subclass
         def key(self, request, dt):
             return '%s%s-%s-%s' % (
                 self.cache_prefix,
-                request.META.get('REMOTE_ADDR', ''),
+                self.get_ip(request),
                 request.POST['username'],
                 dt.strftime('%Y%m%d%H%M'),
             )
@@ -110,7 +113,7 @@ Using with other backends
 .. _custom_backends:
 
 The way django-ratelimit-backend is implemented requires the authentication
-backends to have an ``authenticate()`` that thakes an additional ``request``
+backends to have an ``authenticate()`` that takes an additional ``request``
 keyword argument.
 
 While django-ratelimit-backend works fine with the default ``ModelBackend`` by

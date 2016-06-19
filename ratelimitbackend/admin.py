@@ -16,8 +16,10 @@ class RateLimitAdminSite(AdminSite):
         context = {
             'title': _('Log in'),
             'app_path': request.get_full_path(),
-            REDIRECT_FIELD_NAME: request.get_full_path(),
         }
+        if (REDIRECT_FIELD_NAME not in request.GET and
+                REDIRECT_FIELD_NAME not in request.POST):
+            context[REDIRECT_FIELD_NAME] = request.get_full_path()
         context.update(extra_context or {})
         defaults = {
             'extra_context': context,
@@ -32,5 +34,5 @@ site = RateLimitAdminSite()
 def autodiscover():
     django_autodiscover()
     for model, modeladmin in django_site._registry.items():
-        if not model in site._registry:
+        if model not in site._registry:
             site.register(model, modeladmin.__class__)
